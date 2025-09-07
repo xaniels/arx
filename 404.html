@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Arxa Distro Tools</title>
     <script>
-      // Simple redirect to root for GitHub Pages
+      // GitHub Pages 404 redirect for client-side routing
+      // Store the current URL and redirect to root
+      sessionStorage.redirect = location.href;
       window.location.replace('/');
     </script>
   </head>
