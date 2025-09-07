@@ -12,10 +12,76 @@
     <title>Arxa Distro Tools</title>
     <script src="https://cdn.lgrckt-in.com/LogRocket.min.js" crossorigin="anonymous"></script>
     <script>window.LogRocket && window.LogRocket.init('bcc99b/arxa');</script>
-    <script type="module" crossorigin src="/assets/index-D0u6Q8lw.js"></script>
+    <script type="module" crossorigin src="/assets/index-B_BBzt88.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-CQpfV1_j.css">
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Check authentication on page load
+      (function() {
+        // Check if we have a stored redirect from GitHub Pages 404
+        const redirect = sessionStorage.redirect;
+        if (redirect) {
+          sessionStorage.removeItem('redirect');
+          try {
+            const url = new URL(redirect);
+            const path = url.pathname + url.search + url.hash;
+            
+            // If trying to access dashboard, check authentication first
+            if (path === '/dashboard' || path.startsWith('/dashboard')) {
+              // Check if we have a session cookie
+              const hasSessionCookie = document.cookie.includes('session_token=');
+              
+              if (hasSessionCookie) {
+                // Verify session with backend
+                fetch('https://hq.arxa.me/auth/verify', {
+                  method: 'GET',
+                  credentials: 'include',
+                  headers: {
+                    'X-Device-Fingerprint': 'initial-check',
+                    'X-Screen-Resolution': screen.width + 'x' + screen.height,
+                    'X-User-Agent': navigator.userAgent,
+                    'X-Timestamp': Date.now().toString()
+                  }
+                })
+                .then(response => response.json())
+                .then(data => {
+                  if (data.success) {
+                    // User is authenticated, store auth state and redirect
+                    sessionStorage.authState = JSON.stringify({
+                      isAuthenticated: true,
+                      user: data.data,
+                      timestamp: Date.now()
+                    });
+                    // Let React handle the redirect
+                    sessionStorage.redirect = redirect;
+                  } else {
+                    // User is not authenticated, clear any auth state
+                    sessionStorage.removeItem('authState');
+                    sessionStorage.removeItem('redirect');
+                  }
+                })
+                .catch(error => {
+                  console.error('Auth check failed:', error);
+                  sessionStorage.removeItem('authState');
+                  sessionStorage.removeItem('redirect');
+                });
+              } else {
+                // No session cookie, clear auth state
+                sessionStorage.removeItem('authState');
+                sessionStorage.removeItem('redirect');
+              }
+            } else {
+              // Not dashboard, just store the redirect
+              sessionStorage.redirect = redirect;
+            }
+          } catch (error) {
+            console.error('Error parsing redirect URL:', error);
+            sessionStorage.removeItem('redirect');
+          }
+        }
+      })();
+    </script>
   </body>
 </html>
